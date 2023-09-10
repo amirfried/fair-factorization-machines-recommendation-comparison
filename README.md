@@ -11,7 +11,7 @@ This repository holds the code and additional artifacts for a thesis that will c
 - pandas
 - lightfm
 
-[!NOTE]
+[!NOTE]  
 Can be installed using pip
 
 ## Important links
