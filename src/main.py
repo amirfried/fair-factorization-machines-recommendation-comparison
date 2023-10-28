@@ -3,7 +3,7 @@
 ###########
 import os
 import pandas as pd
-# import numpy as np
+import numpy as np
 from lightfm.evaluation import auc_score
 from lightfm.evaluation import precision_at_k
 from lightfm.cross_validation import random_train_test_split
@@ -32,6 +32,10 @@ ratings = pd.read_csv(os.path.join(cwd, 'ml-1m', 'ratings.dat'),
 ################################################
 # Split the data to train, test and validation #
 ################################################
+train_users, test_users = np.split(users.sample(frac=1, random_state=42), [int(.8*len(users))])
+bool_ratings = ratings[ratings['rating'] > 3]
+train_ratings = bool_ratings[bool_ratings['user_id'].isin(train_users['user_id'].unique())]
+test_ratings = bool_ratings[bool_ratings['user_id'].isin(test_users['user_id'].unique())]
 # train_users, validate_users, test_users = np.split(users.sample(frac=1, random_state=42), [int(.6*len(users)), int(.8*len(users))])
 # train_ratings = ratings[ratings['user_id'].isin(train_users['user_id'].unique())]
 # validate_ratings = ratings[ratings['user_id'].isin(validate_users['user_id'].unique())]
@@ -73,12 +77,14 @@ print('Num users: {}, num movies: {}.'.format(num_users, num_movies))
 # (test_interactions, weights) = dataset.build_interactions(((x['user_id'], x['movie_id'])
 #                                                       for _, x in test_ratings.iterrows()))
 # print(repr(test_interactions))
-(interactions, weights) = dataset.build_interactions(((x['user_id'], x['movie_id'])
-                                                      for _, x in ratings.iterrows()))
+(train_interactions, train_weights) = dataset.build_interactions(((x['user_id'], x['movie_id'])
+                                                      for _, x in train_ratings.iterrows()))
+(test_interactions, test_weights) = dataset.build_interactions(((x['user_id'], x['movie_id'])
+                                                      for _, x in test_ratings.iterrows()))
 # print("===== interactions =====")
 # print(repr(interactions))
 # print("===== end interactions =====")
-(train_interactions, test_interactions) = random_train_test_split(interactions, random_state=42)
+# (train_interactions, test_interactions) = random_train_test_split(interactions, random_state=42)
 # print("===== train_interactions =====")
 # print(repr(train_interactions))
 # print("===== end train_interactions =====")
@@ -119,3 +125,15 @@ print('Test set AUC: %s' % test_auc)
 # print('Training set precision: %.2f' % train_precision)
 # test_precision = precision_at_k(model, test_interactions, user_features=user_features, item_features=movie_features).mean()
 # print('Test set precision: %.2f' % test_precision)
+
+###########
+# Predict #
+###########
+# user_id = test_users['user_id'].iloc[0]
+# user_list = [user_id] * 10
+# movie_list = [588, 1, 3052, 1479, 216, 10, 11, 12, 13, 14]
+# print(movie_list)
+# result = model.predict(user_ids=user_list, item_ids=movie_list)
+# print('Prediction result: %s' % result)
+# user_ratings = test_ratings[test_ratings['user_id'].isin([user_id])]
+# print('Actual:\n %s' % user_ratings)
