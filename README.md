@@ -10,6 +10,8 @@ This repository holds the code and additional artifacts for a thesis that will c
 
 - pandas
 - lightfm
+- numpy
+- matplotlib
 
 > [!NOTE]  
 > Can be installed using pip
@@ -21,3 +23,7 @@ This repository holds the code and additional artifacts for a thesis that will c
 [LightFM Dataset](https://making.lyst.com/lightfm/docs/lightfm.data.html)
 
 [LightFM Dataset example](https://making.lyst.com/lightfm/docs/examples/dataset.html)
+
+## Data maanipulation
+
+66 zipcodes in NNNNN-NNNN format were changed to NNNNN by removing the suffix. This is in order to have all zipcodes in teh same format.
