@@ -108,6 +108,7 @@ user_features = dataset.build_user_features(((x['user_id'], {"Gender": float(x['
 movie_features = dataset.build_item_features(((x['movie_id'], x['genre'].split('|'))
                                               for _, x in movies.iterrows()), normalize=False)
 # print('movie_features:\n{}'.format(movie_features))
+# print(movie_features.shape[0])
 # print("===== movie_features =====")
 # print(repr(movie_features))
 # print("===== end movie_features =====")
@@ -179,3 +180,8 @@ print('Precision: %.2f' % train_precision)
 # print('Prediction result: %s' % result)
 # user_ratings = test_ratings[test_ratings['user_id'].isin([user_id])]
 # print('Actual:\n %s' % user_ratings)
+list_of_unique_test_users = test_users['user_id'].unique()
+predictions = []
+for i in range(len(list_of_unique_test_users)):
+    predictions.append(warp_model.predict(np.full(3883, list_of_unique_test_users[i]-1), np.arange(0, 3883), item_features=movie_features, user_features=user_features))
+print(predictions)
