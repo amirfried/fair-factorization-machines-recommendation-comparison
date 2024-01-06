@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lightfm.evaluation import auc_score
 from lightfm.evaluation import precision_at_k
+from lightfm.evaluation import recall_at_k
 from lightfm.cross_validation import random_train_test_split
 from lightfm.data import Dataset
 from lightfm import LightFM
@@ -30,6 +31,20 @@ users['gender'] = users['gender'].replace(['M', 'F'], [0, 1])
 ratings = pd.read_csv(os.path.join(cwd, 'ml-1m', 'ratings.dat'),
                       delimiter='::', engine='python', header=None,
                       names=['user_id', 'movie_id', 'rating', 'time'])
+
+##########################
+# Movies fairness scores #
+##########################
+
+movies_fairness_score = []
+for _, movie in movies.iterrows():
+    score = -1.0
+    if "Adventure" in movie['genre'] or "Comedy" in movie['genre'] or "Documentary" in movie['genre'] or "Drama" in movie['genre'] or "Fantasy" in movie['genre']:
+        score = 0.0
+    if "Animation" in movie['genre'] or "Children's" in movie['genre'] or "Musical" in movie['genre'] or "Romance" in movie['genre']:
+        score = 1.0
+    movies_fairness_score.append(score)
+movies_fairness_score = np.array(movies_fairness_score)
 
 ################################################
 # Split the data to train, test and validation #
@@ -168,6 +183,8 @@ train_auc = auc_score(warp_model,
 print('AUC warp_model: %s' % train_auc)
 train_precision = precision_at_k(warp_model, test_weights, train_weights, k=5, user_features=user_features, item_features=movie_features).mean()
 print('Precision: %.2f' % train_precision)
+# train_recall = recall_at_k(warp_model, test_weights, train_weights, k=5, user_features=user_features, item_features=movie_features).mean()
+# print('Recall: %.2f' % train_recall)
 
 ###########
 # Predict #
@@ -181,7 +198,40 @@ print('Precision: %.2f' % train_precision)
 # user_ratings = test_ratings[test_ratings['user_id'].isin([user_id])]
 # print('Actual:\n %s' % user_ratings)
 list_of_unique_test_users = test_users['user_id'].unique()
-predictions = []
+prediction_scores = []
+top_predictions = []
+prediction_fair_scores = []
+top_fair_predictions = []
+same_predictions_scores = []
+fairness_scores = []
+non_fairness_scores = []
 for i in range(len(list_of_unique_test_users)):
-    predictions.append(warp_model.predict(np.full(3883, list_of_unique_test_users[i]-1), np.arange(0, 3883), item_features=movie_features, user_features=user_features))
-print(predictions)
+    user_prediction_scores = warp_model.predict(np.full(3883, list_of_unique_test_users[i]-1), np.arange(0, 3883), item_features=movie_features, user_features=user_features)
+    user_prediction_scores /= np.max(np.abs(user_prediction_scores))
+    user_prediction_fair_scores = user_prediction_scores*0.9 + movies_fairness_score*0.1
+    prediction_scores.append(user_prediction_scores)
+    prediction_fair_scores.append(user_prediction_fair_scores)
+    user_predictions = np.argsort(-user_prediction_scores)
+    user_top_predictions = user_predictions[:10]
+    top_predictions.append(user_top_predictions)
+    user_fair_predictions = np.argsort(-user_prediction_fair_scores)
+    user_top_fair_predictions = user_fair_predictions[:10]
+    top_fair_predictions.append(user_top_fair_predictions)
+    user_num_same_predictions = 0
+    user_predictions_fairness_score = 0
+    for prediction in user_top_fair_predictions:
+        if prediction in user_top_predictions:
+            user_num_same_predictions = user_num_same_predictions + 1
+        user_predictions_fairness_score = user_predictions_fairness_score + ((movies_fairness_score[prediction]+1)/2)
+    same_predictions_scores.append(user_num_same_predictions/10)
+    fairness_scores.append(user_predictions_fairness_score/10)
+    user_predictions_non_fairness_score = 0
+    for prediction in user_top_predictions:
+        user_predictions_non_fairness_score = user_predictions_non_fairness_score + ((movies_fairness_score[prediction]+1)/2)
+    non_fairness_scores.append(user_predictions_non_fairness_score/10)
+fairness_prediction = sum(same_predictions_scores) / len(same_predictions_scores)
+print('Fairness prediction score: %.2f' % fairness_prediction)
+fairness_score = sum(fairness_scores) / len(fairness_scores)
+print('Fairness score: %.2f' % fairness_score)
+non_fairness_score = sum(non_fairness_scores) / len(non_fairness_scores)
+print('Non-fairness score: %.2f' % non_fairness_score)
