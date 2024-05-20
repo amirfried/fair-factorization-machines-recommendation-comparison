@@ -1,6 +1,6 @@
 # fair-factorization-machines-recommendation-comparison
 
-This repository holds the code and additional artifacts for a thesis that will compare multiple methods of recommendation.
+This repository holds the code and additional artifacts for a thesis that will compare multiple methods of recommendation with fairness considuration.
 
 ## High level diagram
 
@@ -24,6 +24,17 @@ This repository holds the code and additional artifacts for a thesis that will c
 
 [LightFM Dataset example](https://making.lyst.com/lightfm/docs/examples/dataset.html)
 
-## Data maanipulation
+## How to run
 
-66 zipcodes in NNNNN-NNNN format were changed to NNNNN by removing the suffix. This is in order to have all zipcodes in teh same format.
+```
+python3 -W ignore ./src/main.py -h
+```
+
+## Helper run script
+
+Helper run script will run all parameters variations and produce all results in target/result.csv.
+To run it:
+
+```
+src/run.sh
+```
