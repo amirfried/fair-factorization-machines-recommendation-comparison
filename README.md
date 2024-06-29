@@ -12,6 +12,7 @@ This repository holds the code and additional artifacts for a thesis that will c
 - lightfm
 - numpy
 - matplotlib
+- streamlit
 
 > [!NOTE]  
 > Can be installed using pip
@@ -26,15 +27,23 @@ This repository holds the code and additional artifacts for a thesis that will c
 
 ## How to run
 
+### Model creation, training and results generation helper
+
 ```
 python3 -W ignore ./src/main.py -h
 ```
 
-## Helper run script
+### Helper run script for model creation, training and results generation helper
 
 Helper run script will run all parameters variations and produce all results in target/result.csv.
 To run it:
 
 ```
 src/run.sh
+```
+
+### Visualizations
+
+```
+streamlit run ./src/visualize.py
 ```
