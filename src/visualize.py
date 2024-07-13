@@ -9,10 +9,32 @@ st.set_page_config(layout="wide")
 samples = st.sidebar.slider("Samples: ", 1,  5, 3, 1)
 top_results_to_compare = st.sidebar.slider("Top results to compare: ", 1,  10, 5, 1)
 fairness_considuration_ratio = st.sidebar.slider("Fairness Consideration Ratio: ", 0.1,  0.5, 0.2, 0.1)
-similarity_between_fair_and_regular_predictions_col, fairness_score_of_fair_predictions_col, fairness_score_of_regular_predictions_col = st.columns(3)
+auc_col, similarity_between_fair_and_regular_predictions_col, fairness_score_of_fair_predictions_col, fairness_score_of_regular_predictions_col = st.columns(4)
+# auc_col, similarity_between_fair_and_regular_predictions_col = st.columns(2)
 data_samples = data[(data['fairness_considuration_ratio'] == fairness_considuration_ratio) & (data['top_results_to_compare'] == top_results_to_compare)]
 data_top_results_to_compare = data[(data['samples'] == samples) & (data['fairness_considuration_ratio'] == fairness_considuration_ratio)]
 data_fairness_considuration_ratio = data[(data['samples'] == samples) & (data['top_results_to_compare'] == top_results_to_compare)]
+samples_auc_chart_data = pd.DataFrame(
+   {
+       "samples": data_samples['samples'],
+       "auc": data_samples['auc'],
+       "type": data_samples['type'],
+   }
+)
+top_results_to_compare_auc_chart_data = pd.DataFrame(
+   {
+       "top_results_to_compare": data_top_results_to_compare['top_results_to_compare'],
+       "auc": data_top_results_to_compare['auc'],
+       "type": data_top_results_to_compare['type'],
+   }
+)
+fairness_considuration_ratio_auc_chart_data = pd.DataFrame(
+   {
+       "fairness_considuration_ratio": data_fairness_considuration_ratio['fairness_considuration_ratio'],
+       "auc": data_fairness_considuration_ratio['auc'],
+       "type": data_fairness_considuration_ratio['type'],
+   }
+)
 samples_similarity_between_fair_and_regular_predictions_chart_data = pd.DataFrame(
    {
        "samples": data_samples['samples'],
@@ -76,6 +98,11 @@ fairness_considuration_ratio_fairness_score_of_regular_predictions_chart_data = 
        "type": data_fairness_considuration_ratio['type'],
    }
 )
+with auc_col:
+    st.header("AUC")
+    st.line_chart(samples_auc_chart_data, x="samples", y="auc", x_label="Samples", y_label="AUC", color="type")
+    st.line_chart(top_results_to_compare_auc_chart_data, x="top_results_to_compare", y="auc", x_label="Top results to compare", y_label="AUC", color="type")
+    st.line_chart(fairness_considuration_ratio_auc_chart_data, x="fairness_considuration_ratio", y="auc", x_label="Fairness Consideration Ratio", y_label="AUC", color="type")
 with similarity_between_fair_and_regular_predictions_col:
     st.header("Similarity")
     st.line_chart(samples_similarity_between_fair_and_regular_predictions_chart_data, x="samples", y="similarity_between_fair_and_regular_predictions", x_label="Samples", y_label="Similarity", color="type")
