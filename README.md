@@ -45,5 +45,5 @@ src/run.sh
 ### Visualizations
 
 ```
-streamlit run ./src/visualize.py
+python3 -m streamlit run ./src/visualize[-seed].py
 ```

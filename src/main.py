@@ -31,9 +31,10 @@ def ratio(x):
 #########
 cwd = os.getcwd()
 parser = argparse.ArgumentParser(description='Movie rating prediction')
+parser.add_argument('-n', '--number', type=int, default=96, help='Seed number for random numbers generation')
 parser.add_argument('-t', '--type', choices=['random', 'popular', 'consensus', 'controversial', 'none'], default='none', help='Type of sample selection')
 parser.add_argument('-s', '--samples', type=int, default=3, help='Amount of sample selection')
-parser.add_argument('-r', '--ratio', type=ratio, default='0.1', help='Fairness considuration ratio in a fair prediction')
+parser.add_argument('-r', '--ratio', type=float, default=0.1, help='Fairness considuration ratio in a fair prediction')
 parser.add_argument('-k', '--k', type=int, default=10, help='Amount of top results to compare')
 parser.add_argument('-o', '--output', choices=['machine', 'human'], default='human', help='Output format')
 args = parser.parse_args()
@@ -148,7 +149,7 @@ movie_features = dataset.build_item_features(((x['movie_id'], x['genre'].split('
 ###################
 # Build the model #
 ###################
-warp_model = LightFM(loss='warp', random_state=96)
+warp_model = LightFM(loss='warp', random_state=args.number)
 warp_model.fit(train_weights, user_features=user_features, item_features=movie_features, epochs=10)
 
 ############
@@ -182,7 +183,7 @@ fairness_scores = []
 non_fairness_scores = []
 for i in range(len(list_of_unique_test_users)):
     user_prediction_scores = warp_model.predict(np.full(3883, list_of_unique_test_users[i]-1), np.arange(0, 3883), item_features=movie_features, user_features=user_features)
-    user_prediction_scores /= np.max(np.abs(user_prediction_scores))
+    user_prediction_scores = 2.*(user_prediction_scores - np.min(user_prediction_scores))/np.ptp(user_prediction_scores)-1
     user_prediction_fair_scores = user_prediction_scores*(1-args.ratio) + movies_fairness_score*args.ratio
     prediction_scores.append(user_prediction_scores)
     prediction_fair_scores.append(user_prediction_fair_scores)
@@ -220,4 +221,4 @@ if args.output == 'human':
 else:
     outputs.append(non_fairness_score)
 if args.output == 'machine':
-    print('%s,%d,%.1f,%d,%.2f,%.2f,%.2f,%.2f,%.2f' % (args.type, args.samples, args.ratio, args.k, outputs[0], outputs[1], outputs[2], outputs[3], outputs[4]))
+    print('%d,%s,%d,%.2f,%d,%.2f,%.2f,%.2f,%.2f,%.2f' % (args.number, args.type, args.samples, args.ratio, args.k, outputs[0], outputs[1], outputs[2], outputs[3], outputs[4]))
